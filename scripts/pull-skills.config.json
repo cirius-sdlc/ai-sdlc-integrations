@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "name": "skill-sdlc-principles",
+      "src": "../ai-sdlc-guideline/docs/agent-integration/principles.md",
+      "dest": "skills/sdlc-principles/SKILL.md",
+      "section": "Summary for agents",
+      "frontmatter": {
+        "name": "sdlc-principles",
+        "description": "AI-SDLC primer: the three rules an agent must internalize (governance is contract input, evidence over assertion, vendor-neutral source). Loads when working in an AI-SDLC workspace and no more specific skill applies."
+      }
+    },
+    {
+      "name": "skill-sdlc-bootstrap",
+      "src": "../ai-sdlc-guideline/docs/agent-integration/bootstrap-workspace.md",
+      "dest": "skills/sdlc-bootstrap/SKILL.md",
+      "section": "Summary for agents",
+      "frontmatter": {
+        "name": "sdlc-bootstrap",
+        "description": "AI-SDLC: take a fresh workspace from zero to a green aisdlc doctor. Use when the workspace has not yet been initialized, governance has not been vendored, or doctor reports failures."
+      }
+    },
+    {
+      "name": "skill-sdlc-slice",
+      "src": "../ai-sdlc-guideline/docs/agent-integration/working-a-slice.md",
+      "dest": "skills/sdlc-slice/SKILL.md",
+      "section": "Summary for agents",
+      "frontmatter": {
+        "name": "sdlc-slice",
+        "description": "AI-SDLC: how to walk one slice from DDD through ADD. Use when starting a new feature, bug fix, or refactor; when recording phase runs; when interpreting verify-gate output."
+      }
+    },
+    {
+      "name": "skill-sdlc-callback",
+      "src": "../ai-sdlc-guideline/docs/agent-integration/filing-callbacks.md",
+      "dest": "skills/sdlc-callback/SKILL.md",
+      "section": "Summary for agents",
+      "frontmatter": {
+        "name": "sdlc-callback",
+        "description": "AI-SDLC: file a callback when an upstream artifact needs correction mid-slice. Use whenever the work in the current phase contradicts a prior DDD, SDD, UDD, or VDD artifact; never silently amend upstream."
+      }
+    },
+    {
+      "name": "skill-sdlc-learning",
+      "src": "../ai-sdlc-guideline/docs/agent-integration/promoting-learnings.md",
+      "dest": "skills/sdlc-learning/SKILL.md",
+      "section": "Summary for agents",
+      "frontmatter": {
+        "name": "sdlc-learning",
+        "description": "AI-SDLC: record observations and propose learning promotions. Use when recurring insights cross threshold and may belong in durable project memory. Never auto-writes to memory; promotion is operator-curated."
+      }
+    }
+  ]
+}
