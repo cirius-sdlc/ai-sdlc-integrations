@@ -1,8 +1,8 @@
 ---
 generated-from: ../ai-sdlc-guideline/docs/agent-integration/filing-callbacks.md
 generated-section: Summary for agents
-source-sha256: ef21f29d32d1ad19898d92ac85ee330bce0561053fe089f67d7dfb36c01d011d
-pulled-at: 2026-05-30T09:51:58.006Z
+source-sha256: e648e47b4babf47c871525c13f5f84a2da00ce5e02411a0ccb702f74b8f937f1
+pulled-at: 2026-05-30T10:25:17.707Z
 name: sdlc-callback
 description: "AI-SDLC: file a callback when an upstream artifact needs correction mid-slice. Use whenever the work in the current phase contradicts a prior DDD, SDD, UDD, or VDD artifact; never silently amend upstream."
 purpose: Record a correction against an upstream artifact instead of silently editing it.
@@ -54,6 +54,12 @@ Rules:
      observation). The `regression-evidence` flag is mandatory.
 4. **Subject must be a file or section reference.** "The SDD" is too
    vague; "`docs/sdd/orders.md#cancellation`" is filable.
+5. **Use `--target OPERATOR` when you lack information, not a wrong
+   artifact.** This is the needs-input primitive: when you cannot
+   proceed because information is absent from the workspace, file an
+   `OPERATOR` callback whose `--subject` is the question. It is
+   human-only and reconciles when the operator supplies the answer — no
+   regression evidence. Halt and ask; never guess or fabricate.
 
 Do not:
 
