@@ -36,8 +36,19 @@ import {
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-type FrontmatterValue = string | number | boolean;
+type FrontmatterValue = string | number | boolean | string[];
 type Frontmatter = Record<string, FrontmatterValue>;
+
+// Required skill-schema fields per ai-sdlc/skill-contract.md. A
+// generated skill missing any of these is a hard error (exit 1):
+// the schema contract is not satisfied.
+const REQUIRED_SKILL_FIELDS = [
+  "name",
+  "description",
+  "purpose",
+  "steps",
+  "exit_criteria",
+] as const;
 
 interface SectionSource {
   name: string;
@@ -62,20 +73,45 @@ function sha256(s: string): string {
 
 function readFrontmatter(content: string): {
   fm: Record<string, string>;
+  raw: string;
   body: string;
 } {
   const m = FRONTMATTER_RE.exec(content);
-  if (!m) return { fm: {}, body: content };
+  if (!m) return { fm: {}, raw: "", body: content };
   const fm: Record<string, string> = {};
   for (const line of m[1].split("\n")) {
+    // Skip list-item continuation lines ("  - item"); only top-level
+    // `key: value` scalars are captured here. List fields are compared
+    // structurally via schemaFieldsMatch, not through this map.
+    const trimmed = line.trimStart();
+    if (trimmed.startsWith("- ")) continue;
     const idx = line.indexOf(":");
     if (idx <= 0) continue;
     fm[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
   }
-  return { fm, body: content.slice(m[0].length) };
+  return { fm, raw: m[1], body: content.slice(m[0].length) };
 }
 
-function renderValue(v: FrontmatterValue): string {
+// schemaFieldsMatch reports whether the on-disk frontmatter block already
+// encodes exactly the caller-supplied schema fields. It re-renders the
+// intended fields and checks each rendered line is present verbatim in
+// the on-disk frontmatter, so a list field (multi-line) is compared
+// structurally rather than via the scalar map. Provenance fields
+// (generated-*, source-sha256, pulled-at) are not part of `frontmatter`
+// and are ignored here.
+function schemaFieldsMatch(
+  intended: Frontmatter | undefined,
+  rawBlock: string,
+): boolean {
+  if (!intended) return true;
+  for (const key of Object.keys(intended)) {
+    const rendered = renderField(key, intended[key]);
+    if (!rawBlock.includes(rendered)) return false;
+  }
+  return true;
+}
+
+function renderScalar(v: string | number | boolean): string {
   if (typeof v === "number" || typeof v === "boolean") return String(v);
   // Quote only when the value would be ambiguous as a YAML scalar.
   // Paths and ISO timestamps stay unquoted so the harness's lint regex
@@ -88,10 +124,20 @@ function renderValue(v: FrontmatterValue): string {
   return needsQuote ? JSON.stringify(v) : v;
 }
 
+function renderField(key: string, v: FrontmatterValue): string {
+  if (Array.isArray(v)) {
+    // YAML block sequence. Empty arrays render as an explicit `[]`.
+    if (v.length === 0) return `${key}: []`;
+    const items = v.map((item) => `  - ${renderScalar(item)}`);
+    return `${key}:\n${items.join("\n")}`;
+  }
+  return `${key}: ${renderScalar(v)}`;
+}
+
 function renderFrontmatter(fm: Frontmatter): string {
   const keys = Object.keys(fm);
   if (keys.length === 0) return "";
-  const lines = keys.map((k) => `${k}: ${renderValue(fm[k])}`);
+  const lines = keys.map((k) => renderField(k, fm[k]));
   return `---\n${lines.join("\n")}\n---\n\n`;
 }
 
@@ -185,16 +231,26 @@ function pullSection(source: SectionSource, repoRoot: string): PullResult {
 
   if (existsSync(destAbs)) {
     const existing = readFileSync(destAbs, "utf8");
-    const { fm, body: existingBody } = readFrontmatter(existing);
+    const { fm, raw, body: existingBody } = readFrontmatter(existing);
     const recordedHash = fm["source-sha256"];
     const bodyHash = sha256(existingBody);
 
-    if (recordedHash && recordedHash === srcHash && bodyHash === recordedHash) {
-      result.skipped++;
-      return result;
-    }
+    // Hand-edit guard: a body whose hash no longer matches the recorded
+    // source hash means someone edited the generated file. Refuse.
     if (recordedHash && bodyHash !== recordedHash) {
       result.conflicts.push(destAbs);
+      return result;
+    }
+    // Idempotency: skip only when the source body is unchanged AND the
+    // schema frontmatter already matches the config. A schema-only change
+    // (new/updated skill fields, same body) must still rewrite the file.
+    if (
+      recordedHash &&
+      recordedHash === srcHash &&
+      bodyHash === recordedHash &&
+      schemaFieldsMatch(source.frontmatter, raw)
+    ) {
+      result.skipped++;
       return result;
     }
   }
@@ -224,12 +280,67 @@ function validateConfig(raw: unknown): Config {
     if (typeof s !== "object" || s === null) {
       throw new Error(`invalid source: ${JSON.stringify(s)}`);
     }
-    const so = s as { name?: unknown; src?: unknown; dest?: unknown; section?: unknown };
+    const so = s as {
+      name?: unknown;
+      src?: unknown;
+      dest?: unknown;
+      section?: unknown;
+      frontmatter?: unknown;
+    };
     if (!so.name || !so.src || !so.dest || !so.section) {
       throw new Error(`source missing required fields: ${JSON.stringify(so)}`);
     }
+    validateSkillFields(so.name as string, so.frontmatter);
   }
   return raw as Config;
+}
+
+// validateSkillFields enforces the skill schema (ai-sdlc/skill-contract.md):
+// every skill's frontmatter must carry the required fields, non-empty.
+// A list field must be a non-empty array of strings; a scalar field must
+// be a non-empty string.
+function validateSkillFields(sourceName: string, frontmatter: unknown): void {
+  if (typeof frontmatter !== "object" || frontmatter === null) {
+    throw new Error(
+      `skill "${sourceName}": frontmatter is required and must carry the skill schema fields`,
+    );
+  }
+  const fm = frontmatter as Record<string, unknown>;
+  for (const field of REQUIRED_SKILL_FIELDS) {
+    const v = fm[field];
+    if (v === undefined || v === null) {
+      throw new Error(
+        `skill "${sourceName}": missing required schema field "${field}" (see ai-sdlc/skill-contract.md)`,
+      );
+    }
+    if (Array.isArray(v)) {
+      if (v.length === 0 || v.some((x) => typeof x !== "string" || x.trim() === "")) {
+        throw new Error(
+          `skill "${sourceName}": field "${field}" must be a non-empty list of non-empty strings`,
+        );
+      }
+    } else if (typeof v !== "string" || v.trim() === "") {
+      throw new Error(
+        `skill "${sourceName}": field "${field}" must be a non-empty string or list`,
+      );
+    }
+  }
+  // Optional fields, when present, must still be well-formed lists/strings.
+  for (const field of ["inputs", "outputs", "constraints"]) {
+    if (!(field in fm)) continue;
+    const v = fm[field];
+    if (Array.isArray(v)) {
+      if (v.some((x) => typeof x !== "string" || x.trim() === "")) {
+        throw new Error(
+          `skill "${sourceName}": optional field "${field}" must contain only non-empty strings`,
+        );
+      }
+    } else if (typeof v !== "string" || v.trim() === "") {
+      throw new Error(
+        `skill "${sourceName}": optional field "${field}", if present, must be a non-empty string or list`,
+      );
+    }
+  }
 }
 
 function main(): number {

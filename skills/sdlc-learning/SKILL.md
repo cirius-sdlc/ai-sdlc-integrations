@@ -2,9 +2,23 @@
 generated-from: ../ai-sdlc-guideline/docs/agent-integration/promoting-learnings.md
 generated-section: Summary for agents
 source-sha256: e25fd548b8796bdce6398f9efd5ff5b6dbebcca0967add7b74e63af8b1f49f1c
-pulled-at: 2026-05-29T14:51:30.135Z
+pulled-at: 2026-05-30T09:51:58.012Z
 name: sdlc-learning
 description: "AI-SDLC: record observations and propose learning promotions. Use when recurring insights cross threshold and may belong in durable project memory. Never auto-writes to memory; promotion is operator-curated."
+purpose: Record recurring observations and propose durable ones for operator-curated promotion.
+inputs:
+  - a recurring observation and the runs that evidence it
+outputs:
+  - a learning candidate, or a promotion proposal for operator review
+steps:
+  - Record the observation as a learning candidate against the current run.
+  - When it recurs across the promotion threshold, propose promotion to memory/learnings/ or a binding rule.
+  - Leave the promotion decision to an operator; never auto-write durable memory.
+exit_criteria:
+  - The observation is recorded as a candidate, or a promotion is proposed for operator curation.
+constraints:
+  - Never auto-write to memory; promotion is operator-curated.
+  - Do not promote an observation that has not crossed the threshold.
 ---
 
 ## Summary for agents

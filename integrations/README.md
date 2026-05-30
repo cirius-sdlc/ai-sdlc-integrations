@@ -1,20 +1,28 @@
 # Integrations
 
-Host-specific loaders for the canonical AI-SDLC agent skills.
+Host-specific loaders for the canonical AI-SDLC agent skills, plus
+optional host-shaped UX (slash commands, etc.).
 
 ## What this directory is
 
-`ai-sdlc-guideline/skills/` holds **vendor-neutral skill content**:
+`ai-sdlc-integrations/skills/` holds **vendor-neutral skill content**:
 markdown files generated from the agent-integration pages of the docs
 site, with frontmatter any compliant agent host can read. Each skill
 documents one operational concern (bootstrap, slice, callback,
 learning, principles).
 
-`ai-sdlc-guideline/integrations/<host>/` holds **per-host loaders**:
+`ai-sdlc-integrations/integrations/<host>/` holds **per-host loaders**:
 thin pointer files plus an optional installer that places those
 files where one specific agent host looks for skills. The loaders do
-not duplicate content; they point at `../../skills/` via symlink or
-copy at install time.
+not duplicate skill content; they point at `../../skills/` via
+symlink or copy at install time.
+
+A host directory may also carry **host-specific UX assets** —
+slash commands, keybinds, or any other surface that opencode (or a
+similar host) offers natively. These live in the host directory
+because their shape is host-specific (e.g. opencode's slash-command
+template syntax with `$ARGUMENTS` and `!` shell substitution is not
+host-neutral). There is no governance source for them.
 
 ## Canonical skills
 
@@ -33,7 +41,9 @@ change.
 
 ## Currently-wired hosts
 
-- [`opencode/`](opencode/) — opencode-flavored skill loaders.
+- [`opencode/`](opencode/) — opencode-flavored skill loaders **and**
+  slash commands (`/sdlc-bootstrap`, `/sdlc-attach`, `/sdlc-detach`,
+  `/sdlc-callback`).
 
 ## Adding a host
 
@@ -94,6 +104,20 @@ keys it expects, and how to install / uninstall. ~60 lines.
 ### 5. Add the host to the table in this README
 
 Single line under "Currently-wired hosts" with a link.
+
+## Host-specific UX (e.g. slash commands)
+
+Some hosts have first-class UX surfaces beyond skills — opencode has
+slash commands, others may have keybinds, templates, or palettes.
+These belong inside the host directory because their shape is
+host-specific. Example: `integrations/opencode/commands/sdlc-attach.md`
+uses opencode's `$ARGUMENTS` and `` !`...` `` syntax which no other
+host parses.
+
+Host-specific UX may invoke `aisdlc` to gather facts (typically via
+JSON output). The agent then reasons about the facts. The command is
+a prompt template, not a script: it runs in opencode's prompt
+substitution, not as standalone code.
 
 ## What this directory is NOT
 

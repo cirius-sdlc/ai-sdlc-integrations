@@ -7,7 +7,21 @@
       "section": "Summary for agents",
       "frontmatter": {
         "name": "sdlc-principles",
-        "description": "AI-SDLC primer: the three rules an agent must internalize (governance is contract input, evidence over assertion, vendor-neutral source). Loads when working in an AI-SDLC workspace and no more specific skill applies."
+        "description": "AI-SDLC primer: the three rules an agent must internalize (governance is contract input, evidence over assertion, vendor-neutral source). Loads when working in an AI-SDLC workspace and no more specific skill applies.",
+        "purpose": "Internalize the three rules that prevent the most common agent failures against the framework.",
+        "steps": [
+          "Treat <workspace>/ai-sdlc/ as read-only contract input; never edit it as a slice side effect.",
+          "Back every completion claim with evidence a verifier accepts, not assertion.",
+          "Keep all source vendor-neutral; vendor identity lives only in a host loader."
+        ],
+        "exit_criteria": [
+          "The three rules can be restated and applied to the current task without re-reading governance."
+        ],
+        "constraints": [
+          "Do not treat governance as malleable mid-slice.",
+          "Do not mark outcome=pass when verifying evidence is absent.",
+          "Do not name a specific agent vendor in any committed source or doc."
+        ]
       }
     },
     {
@@ -17,7 +31,30 @@
       "section": "Summary for agents",
       "frontmatter": {
         "name": "sdlc-bootstrap",
-        "description": "AI-SDLC: take a fresh workspace from zero to a green aisdlc doctor. Use when the workspace has not yet been initialized, governance has not been vendored, or doctor reports failures."
+        "description": "AI-SDLC: take a fresh workspace from zero to a green aisdlc doctor. Use when the workspace has not yet been initialized, governance has not been vendored, or doctor reports failures.",
+        "purpose": "Take a fresh project directory from zero to a green aisdlc doctor.",
+        "inputs": [
+          "workspace path",
+          "a governance source path (for init --governance)"
+        ],
+        "outputs": [
+          "an initialized .workflow/ state store",
+          "vendored <workspace>/ai-sdlc/ governance",
+          "a starter AGENTS.md"
+        ],
+        "steps": [
+          "Run aisdlc init --governance <path> to create state, vendor governance, and write AGENTS.md.",
+          "Run aisdlc doctor and expect overall: ok.",
+          "If doctor still fails, read its remediation lines literally; do not improvise."
+        ],
+        "exit_criteria": [
+          "aisdlc doctor reports overall: ok with no failing checks."
+        ],
+        "constraints": [
+          "Do not edit <workspace>/ai-sdlc/ after vendoring.",
+          "Do not create files inside <workspace>/.workflow/ by hand.",
+          "Do not invent a governance tree when one is missing; supply --governance or vendor manually."
+        ]
       }
     },
     {
@@ -27,7 +64,31 @@
       "section": "Summary for agents",
       "frontmatter": {
         "name": "sdlc-slice",
-        "description": "AI-SDLC: how to walk one slice from DDD through ADD. Use when starting a new feature, bug fix, or refactor; when recording phase runs; when interpreting verify-gate output."
+        "description": "AI-SDLC: how to walk one slice from DDD through ADD. Use when starting a new feature, bug fix, or refactor; when recording phase runs; when interpreting verify-gate output.",
+        "purpose": "Walk one unit of work through the DDD to ADD phase chain, recording each phase as an audited run.",
+        "inputs": [
+          "an attached project id",
+          "a short slice title",
+          "a risk tier (T0/T1/T2)"
+        ],
+        "outputs": [
+          "a slice id",
+          "one recorded run per phase",
+          "an evidence-gate result at ADD"
+        ],
+        "steps": [
+          "aisdlc slice start --project <name> --title <title> --risk <tier> to obtain a slice id.",
+          "For each phase in order DDD, SDD, UDD, VDD, ADD: aisdlc run-phase --slice <id> --phase <P> --outcome pass.",
+          "Inspect with aisdlc query state runs --slice <id> and aisdlc verify --slice <id>."
+        ],
+        "exit_criteria": [
+          "Every phase is recorded in order and the ADD evidence gate accepts, auto-completing the slice."
+        ],
+        "constraints": [
+          "Do not record a phase that did not happen.",
+          "Do not mark outcome=pass when the evidence gate would refuse.",
+          "Do not re-run slice start expecting it to reset state; it starts a new slice."
+        ]
       }
     },
     {
@@ -37,7 +98,28 @@
       "section": "Summary for agents",
       "frontmatter": {
         "name": "sdlc-callback",
-        "description": "AI-SDLC: file a callback when an upstream artifact needs correction mid-slice. Use whenever the work in the current phase contradicts a prior DDD, SDD, UDD, or VDD artifact; never silently amend upstream."
+        "description": "AI-SDLC: file a callback when an upstream artifact needs correction mid-slice. Use whenever the work in the current phase contradicts a prior DDD, SDD, UDD, or VDD artifact; never silently amend upstream.",
+        "purpose": "Record a correction against an upstream artifact instead of silently editing it.",
+        "inputs": [
+          "the current slice id",
+          "the target upstream phase",
+          "the subject artifact path and the reason it is wrong"
+        ],
+        "outputs": [
+          "a filed callback with an open status"
+        ],
+        "steps": [
+          "Identify the upstream phase whose artifact is wrong.",
+          "File a callback naming origin phase, target phase, subject, and reason.",
+          "Continue downstream only with the open callback id referenced on the run record."
+        ],
+        "exit_criteria": [
+          "A callback exists against the upstream artifact and dependent work references its id until reconciled."
+        ],
+        "constraints": [
+          "Never silently amend an upstream artifact to fix a downstream problem.",
+          "Do not reconcile a callback without the regression verification its issue requires."
+        ]
       }
     },
     {
@@ -47,7 +129,26 @@
       "section": "Summary for agents",
       "frontmatter": {
         "name": "sdlc-learning",
-        "description": "AI-SDLC: record observations and propose learning promotions. Use when recurring insights cross threshold and may belong in durable project memory. Never auto-writes to memory; promotion is operator-curated."
+        "description": "AI-SDLC: record observations and propose learning promotions. Use when recurring insights cross threshold and may belong in durable project memory. Never auto-writes to memory; promotion is operator-curated.",
+        "purpose": "Record recurring observations and propose durable ones for operator-curated promotion.",
+        "inputs": [
+          "a recurring observation and the runs that evidence it"
+        ],
+        "outputs": [
+          "a learning candidate, or a promotion proposal for operator review"
+        ],
+        "steps": [
+          "Record the observation as a learning candidate against the current run.",
+          "When it recurs across the promotion threshold, propose promotion to memory/learnings/ or a binding rule.",
+          "Leave the promotion decision to an operator; never auto-write durable memory."
+        ],
+        "exit_criteria": [
+          "The observation is recorded as a candidate, or a promotion is proposed for operator curation."
+        ],
+        "constraints": [
+          "Never auto-write to memory; promotion is operator-curated.",
+          "Do not promote an observation that has not crossed the threshold."
+        ]
       }
     }
   ]

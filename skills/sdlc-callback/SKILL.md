@@ -2,9 +2,25 @@
 generated-from: ../ai-sdlc-guideline/docs/agent-integration/filing-callbacks.md
 generated-section: Summary for agents
 source-sha256: ef21f29d32d1ad19898d92ac85ee330bce0561053fe089f67d7dfb36c01d011d
-pulled-at: 2026-05-29T14:51:30.135Z
+pulled-at: 2026-05-30T09:51:58.006Z
 name: sdlc-callback
 description: "AI-SDLC: file a callback when an upstream artifact needs correction mid-slice. Use whenever the work in the current phase contradicts a prior DDD, SDD, UDD, or VDD artifact; never silently amend upstream."
+purpose: Record a correction against an upstream artifact instead of silently editing it.
+inputs:
+  - the current slice id
+  - the target upstream phase
+  - the subject artifact path and the reason it is wrong
+outputs:
+  - a filed callback with an open status
+steps:
+  - Identify the upstream phase whose artifact is wrong.
+  - File a callback naming origin phase, target phase, subject, and reason.
+  - Continue downstream only with the open callback id referenced on the run record.
+exit_criteria:
+  - A callback exists against the upstream artifact and dependent work references its id until reconciled.
+constraints:
+  - Never silently amend an upstream artifact to fix a downstream problem.
+  - Do not reconcile a callback without the regression verification its issue requires.
 ---
 
 ## Summary for agents

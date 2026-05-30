@@ -2,9 +2,20 @@
 generated-from: ../ai-sdlc-guideline/docs/agent-integration/principles.md
 generated-section: Summary for agents
 source-sha256: f3e64db08fb7d7637ca811b485c8f3fecaab790d817be0e8622d6dbe100ef2ba
-pulled-at: 2026-05-29T14:51:30.133Z
+pulled-at: 2026-05-30T09:51:58.004Z
 name: sdlc-principles
 description: "AI-SDLC primer: the three rules an agent must internalize (governance is contract input, evidence over assertion, vendor-neutral source). Loads when working in an AI-SDLC workspace and no more specific skill applies."
+purpose: Internalize the three rules that prevent the most common agent failures against the framework.
+steps:
+  - Treat <workspace>/ai-sdlc/ as read-only contract input; never edit it as a slice side effect.
+  - Back every completion claim with evidence a verifier accepts, not assertion.
+  - Keep all source vendor-neutral; vendor identity lives only in a host loader.
+exit_criteria:
+  - The three rules can be restated and applied to the current task without re-reading governance.
+constraints:
+  - Do not treat governance as malleable mid-slice.
+  - Do not mark outcome=pass when verifying evidence is absent.
+  - Do not name a specific agent vendor in any committed source or doc.
 ---
 
 ## Summary for agents
