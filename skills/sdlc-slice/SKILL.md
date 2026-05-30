@@ -1,8 +1,8 @@
 ---
 generated-from: ../ai-sdlc-guideline/docs/agent-integration/working-a-slice.md
 generated-section: Summary for agents
-source-sha256: dadbf3a3c123c75cb7b7c620d0b67ce32d8efdfbba5b98170df4ef37d04f0cb0
-pulled-at: 2026-05-30T09:50:34.452Z
+source-sha256: 2cadb454db80b8a300f509a8c272897427cf3f194516552857212e0619b876f9
+pulled-at: 2026-05-30T10:40:56.723Z
 name: sdlc-slice
 description: "AI-SDLC: how to walk one slice from DDD through ADD. Use when starting a new feature, bug fix, or refactor; when recording phase runs; when interpreting verify-gate output."
 purpose: Walk one unit of work through the DDD to ADD phase chain, recording each phase as an audited run.
@@ -56,6 +56,11 @@ Rules:
 4. Risk tier (`T0`/`T1`/`T2`) determines the evidence set the gate
    demands (ADR-0010). Set it once at `slice start`; raising risk
    later is allowed via a separate update path, lowering is not.
+5. Load context progressively: for each phase, read its declared
+   **Input** first and no more until the work needs it. `AGENTS.md` is
+   navigation, not a manual; do not read sibling projects' artifacts;
+   pull evidence only when a gate or the task requires it (Flow:
+   "context-loading contract").
 
 Do not:
 
